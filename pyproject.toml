@@ -1,0 +1,10 @@
+[project]
+name = "ai-call-summary"
+version = "0.1.0"
+description = "Turn phone-call transcripts into structured CRM notes with Claude, with PII redaction."
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Fanny Rabinovitch" }]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

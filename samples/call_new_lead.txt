@@ -1,0 +1,5 @@
+Rep: Hello, you left your details on our website about a tax refund check?
+Client: Yes, I changed jobs twice in the last three years and a friend told me I might be owed money.
+Rep: That's very common. Changing jobs often means too much tax was deducted. I'll need your payslip from December of each year.
+Client: I can send those. I'm busy today, can you call me Thursday at 17:30?
+Rep: Of course, Thursday at 17:30 it is.

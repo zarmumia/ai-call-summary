@@ -1,0 +1,8 @@
+Rep: Good morning, this is Rep A from the tax refund office, how can I help?
+Client: Hi, I filed with you in the summer and I still don't know what's happening with my refund. This is the third time I'm calling.
+Rep: I'm sorry about that. Can you confirm your phone number?
+Client: Sure, it's 052-123-4567, and my ID is 012345678.
+Rep: Thank you. I see the file was submitted, but we're still missing your 106 form from your second employer.
+Client: Nobody told me that. I'm really frustrated.
+Rep: I understand. I'll email you exactly what's missing, and I'll call you back tomorrow at 10:00 to make sure it arrived.
+Client: OK, tomorrow at 10. My email is client@example.com.

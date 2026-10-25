@@ -2,6 +2,9 @@
 
 **Every call documented in the CRM, without the rep typing a word.**
 
+> **About this repo:** a working demo from the [Zarmumia](https://zarmumia.co.il) portfolio. It shows the approach, not a finished product: rules a business owner can read, privacy first, and building on the tools a business already has. In client work it is adapted to the specific CRM and processes.
+
+
 In small service teams, what happened on a call often lives only in the rep's memory: what the client wanted, what was promised, when to call back. This tool turns a call transcript into a short, structured CRM note with an AI model, and **removes identifying details before anything leaves your system**.
 
 Example of the kind of note it produces from `samples/call_upset_client.txt`:

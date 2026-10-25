@@ -8,3 +8,17 @@ authors = [{ name = "Fanny Rabinovitch" }]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E501"]  # long JSON fixtures read better on one line
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true

@@ -7,9 +7,12 @@ import os
 import urllib.request
 from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from .redact import redact
 from .summarize import ClaudeSummarizer, DemoSummarizer
+
+BUSINESS_TZ = ZoneInfo("Asia/Jerusalem")
 
 
 def main() -> None:
@@ -22,7 +25,9 @@ def main() -> None:
     args = p.parse_args()
 
     text = Path(args.transcript).read_text(encoding="utf-8")
-    now = datetime.fromisoformat(args.now) if args.now else datetime.now()
+    now = datetime.fromisoformat(args.now) if args.now else datetime.now(BUSINESS_TZ)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=BUSINESS_TZ)
     use_demo = args.demo or not os.environ.get("ANTHROPIC_API_KEY")
     engine = DemoSummarizer() if use_demo else ClaudeSummarizer()
 
@@ -32,7 +37,8 @@ def main() -> None:
     if args.json:
         print(json.dumps(result.to_dict(), indent=2, ensure_ascii=False))
     else:
-        print(f"[engine: {'demo' if use_demo else 'claude'} · redacted before sending: {removed or 'nothing'}]\n")
+        engine_name = "demo" if use_demo else "claude"
+        print(f"[engine: {engine_name} · redacted before sending: {removed or 'nothing'}]\n")
         print(result.to_crm_note())
 
     if args.webhook:

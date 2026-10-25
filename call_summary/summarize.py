@@ -10,6 +10,8 @@ from __future__ import annotations
 import json
 import os
 import re
+import time
+import urllib.error
 import urllib.request
 from datetime import datetime, timedelta
 
@@ -22,7 +24,8 @@ Today is {today}. Read the transcript and return ONLY a JSON object with:
 - "client_intent": what the client wants, in a few words
 - "next_step": one concrete action
 - "next_step_owner": "rep", "client" or "back_office"
-- "callback_at": ISO datetime if a callback was promised, else null (resolve "tomorrow", weekdays etc. from today)
+- "callback_at": ISO datetime if a callback was promised, else null
+  (resolve "tomorrow", weekdays etc. from today)
 - "missing_documents": list of documents the client still needs to send (empty list if none)
 - "sentiment": "positive", "neutral", "concerned" or "upset"
 - "follow_up_needed": true or false
@@ -32,13 +35,34 @@ Transcript:
 {transcript}"""
 
 
+RETRYABLE_STATUS = {429, 500, 502, 503, 504, 529}
+
+
 class ClaudeSummarizer:
-    def __init__(self, api_key: str | None = None, model: str | None = None, max_retries: int = 2):
+    def __init__(self, api_key: str | None = None, model: str | None = None, max_retries: int = 2,
+                 network_retries: int = 3, backoff: float = 1.0, sleep=time.sleep):
         self.api_key = api_key or os.environ["ANTHROPIC_API_KEY"]
         self.model = model or os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-5")
-        self.max_retries = max_retries
+        self.max_retries = max_retries          # re-asks when the model returns invalid JSON
+        self.network_retries = network_retries  # retries for timeouts, rate limits and 5xx
+        self.backoff = backoff
+        self._sleep = sleep
 
     def _call(self, prompt: str) -> str:
+        """One API call, retrying transient failures with exponential backoff."""
+        for attempt in range(self.network_retries + 1):
+            try:
+                return self._request(prompt)
+            except urllib.error.HTTPError as e:
+                if e.code not in RETRYABLE_STATUS or attempt == self.network_retries:
+                    raise
+            except (urllib.error.URLError, TimeoutError):
+                if attempt == self.network_retries:
+                    raise
+            self._sleep(self.backoff * 2 ** attempt)
+        raise RuntimeError("unreachable")
+
+    def _request(self, prompt: str) -> str:
         body = {"model": self.model, "max_tokens": 800, "messages": [{"role": "user", "content": prompt}]}
         req = urllib.request.Request(
             "https://api.anthropic.com/v1/messages",
@@ -56,12 +80,13 @@ class ClaudeSummarizer:
     def summarize(self, transcript: str, now: datetime) -> CallSummary:
         safe, _ = redact(transcript)
         prompt = PROMPT.format(today=now.strftime("%A %Y-%m-%d %H:%M"), transcript=safe)
-        last_error = None
+        last_error: ValueError | None = None
         for _ in range(self.max_retries + 1):
             try:
                 return parse_model_output(self._call(prompt))
             except ValueError as e:      # invalid output: ask again
                 last_error = e
+        assert last_error is not None
         raise last_error
 
 
@@ -85,11 +110,12 @@ class DemoSummarizer:
             else:
                 delta = (WEEKDAYS.index(day) - now.weekday()) % 7 or 7
                 date = now.date() + timedelta(days=delta)
-            callback = datetime(date.year, date.month, date.day, int(m.group(2)), int(m.group(3) or 0)).isoformat()
+            callback = datetime(date.year, date.month, date.day, int(m.group(2)), int(m.group(3) or 0),
+                                tzinfo=now.tzinfo).isoformat()
 
         docs = [d for d in DOC_WORDS if d in low]
         upset = any(w in low for w in ["frustrat", "angry", "third time", "nobody called"])
-        lines = [l.split(":", 1)[1].strip() for l in safe.splitlines() if l.lower().startswith("client:")]
+        lines = [ln.split(":", 1)[1].strip() for ln in safe.splitlines() if ln.lower().startswith("client:")]
         intent = lines[0][:80] if lines else "General inquiry"
 
         if docs:

@@ -1,5 +1,7 @@
 # AI Call Summary
 
+[![XERJ Corpus Hub contributor](https://hub.xerj.org/contributors/zarmumia/badge.svg)](https://hub.xerj.org/contributors/zarmumia)
+
 **Every call documented in the CRM, without the rep typing a word.**
 
 > **About this repo:** a working demo from the [Zarmumia](https://zarmumia.co.il) portfolio. It shows the approach, not a finished product: rules a business owner can read, privacy first, and building on the tools a business already has. In client work it is adapted to the specific CRM and processes.
